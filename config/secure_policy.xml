@@ -1,1 +1,13 @@
 # ROS2 Security Policies or Hardening Rules
+{
+  "access_control_policy": {
+    "node_id": "esp32_tamper_node_01",
+    "allowed_operational_states": ["SECURE", "LOCKDOWN"],
+    "hardware_interrupt_vectors": {
+      "GPIO_4": {
+        "action": "IMMEDIATE_IRAM_ZEROING_WIPE",
+        "priority": "CRITICAL_HALT"
+      }
+    }
+  }
+}

@@ -1,1 +1,10 @@
 # App Configuration Variables
+system:
+  device_id: "esp32_tamper_node_01"
+  heartbeat_interval_ms: 3000
+  log_level: "WARN"
+
+tamper_detection:
+  sensing_pin: 4
+  trigger_edge: "FALLING"
+  key_size_bytes: 16

@@ -1,1 +1,46 @@
 # Device-level Cross-Compilation Environment
+# ==========================================
+# STAGE 1: Automated Compilation Environment
+# ==========================================
+FROM ubuntu:22.04 AS builder
+
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install core build dependencies and python toolchains
+RUN apt-get update && apt-get install -y \
+    cmake \
+    git \
+    wget \
+    curl \
+    python3 \
+    python3-pip \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Arduino CLI to manage our ESP32 toolchain headlessly
+RUN curl -fsSL https://githubusercontent.com | sh
+
+# Configure Arduino CLI indices and install the ESP32 core libraries
+RUN arduino-cli config init && \
+    arduino-cli config set board_manager.additional_urls https://github.io && \
+    arduino-cli core update-index && \
+    arduino-cli core install esp32:esp32
+
+# Set up our workspace
+WORKDIR /build
+COPY src/main.cpp ./tamper_project/tamper_project.ino
+
+# Headlessly compile the C++ source code into a raw bin block for target chip
+RUN arduino-cli compile --fqbn esp32:esp32:esp32 tamper_project --output-dir ./out
+
+# ==========================================
+# STAGE 2: Minimalist Production Artifact Export
+# ==========================================
+FROM alpine:3.19
+
+WORKDIR /dist
+# Extract only the final compiled binaries, stripping out the heavy build tools
+COPY --from=builder /build/out/tamper_project.bin .
+
+CMD ["echo", "Firmware compilation complete. Artifact stored in /dist/tamper_project.bin"]
